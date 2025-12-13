@@ -41,11 +41,33 @@ jobs:
           RPI_USER: ${{ secrets.RPI_USER }}
           RPI_PORT: ${{ secrets.RPI_PORT }}
         run: |
+          # Debug: Check if secrets are set
+          if [ -z "$SSH_PRIVATE_KEY" ]; then
+            echo "ERROR: SSH_PRIVATE_KEY secret is not set!"
+            exit 1
+          fi
+          if [ -z "$RPI_HOST" ]; then
+            echo "ERROR: RPI_HOST secret is not set!"
+            exit 1
+          fi
+          if [ -z "$RPI_USER" ]; then
+            echo "ERROR: RPI_USER secret is not set!"
+            exit 1
+          fi
+          
+          echo "✓ All secrets are set"
+          echo "Connecting to: ${RPI_USER}@${RPI_HOST}:${RPI_PORT:-22}"
+          
           # Setup SSH
           mkdir -p ~/.ssh
           echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -p ${RPI_PORT:-22} $RPI_HOST >> ~/.ssh/known_hosts
+          
+          # Add host key
+          ssh-keyscan -p ${RPI_PORT:-22} $RPI_HOST >> ~/.ssh/known_hosts 2>&1 || {
+            echo "ERROR: Cannot reach Raspberry Pi at $RPI_HOST"
+            exit 1
+          }
           
           # Create remote directory
           ssh -p ${RPI_PORT:-22} ${RPI_USER}@${RPI_HOST} "mkdir -p ~/fpga_sender"
