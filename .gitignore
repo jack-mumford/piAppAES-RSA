@@ -1,0 +1,45 @@
+# Build directories
+build/
+build-debug/
+build-release/
+cmake-build-*/
+
+# CMake
+CMakeCache.txt
+CMakeFiles/
+cmake_install.cmake
+Makefile
+*.cmake
+
+# Compiled binaries
+encrypt_local
+fpga_sender
+*.o
+*.a
+*.so
+*.dylib
+
+# Python (legacy)
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
+
+# Secret files (DO NOT COMMIT)
+piApp/secret.txt
+
+# Encrypted files are OK to commit
+# piApp/encrypted.txt
