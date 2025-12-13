@@ -13,77 +13,25 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
       
-      - name: Install build dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y g++
-      
       - name: Verify encrypted file exists
         run: |
           if [ ! -f piApp/encrypted.txt ]; then
             echo "ERROR: encrypted.txt not found!"
-            echo "Please run: make && ./encrypt_local"
             exit 1
           fi
           echo "✓ encrypted.txt found"
       
-      - name: Deploy to Raspberry Pi
-        if: github.event_name == 'push'
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
-          RPI_HOST: ${{ secrets.RPI_HOST }}
-          RPI_USER: ${{ secrets.RPI_USER }}
-          RPI_PORT: ${{ secrets.RPI_PORT }}
+      - name: Build and send to FPGA
         run: |
-          # Debug: Check if secrets are set
-          if [ -z "$SSH_PRIVATE_KEY" ]; then
-            echo "ERROR: SSH_PRIVATE_KEY secret is not set!"
-            exit 1
-          fi
-          if [ -z "$RPI_HOST" ]; then
-            echo "ERROR: RPI_HOST secret is not set!"
-            exit 1
-          fi
-          if [ -z "$RPI_USER" ]; then
-            echo "ERROR: RPI_USER secret is not set!"
-            exit 1
-          fi
-          
-          echo "✓ All secrets are set"
-          echo "Connecting to: ${RPI_USER}@${RPI_HOST}:${RPI_PORT:-22}"
-          
-          # Setup SSH
-          mkdir -p ~/.ssh
-          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          
-          # Add host key
-          ssh-keyscan -p ${RPI_PORT:-22} $RPI_HOST >> ~/.ssh/known_hosts 2>&1 || {
-            echo "ERROR: Cannot reach Raspberry Pi at $RPI_HOST"
-            exit 1
-          }
-          
-          # Create remote directory
-          ssh -p ${RPI_PORT:-22} ${RPI_USER}@${RPI_HOST} "mkdir -p ~/fpga_sender"
-          
-          # Copy files to Raspberry Pi
-          scp -P ${RPI_PORT:-22} piApp/main.cpp ${RPI_USER}@${RPI_HOST}:~/fpga_sender/
-          scp -P ${RPI_PORT:-22} piApp/encrypted.txt ${RPI_USER}@${RPI_HOST}:~/fpga_sender/
-          
-          # Build and run on Raspberry Pi
-          ssh -p ${RPI_PORT:-22} ${RPI_USER}@${RPI_HOST} << 'EOF'
-            cd ~/fpga_sender
-            # Build
-            g++ -o fpga_sender main.cpp
-            # Run
-            ./fpga_sender --file encrypted.txt
-          EOF
+          cd piApp
+          g++ -o fpga_sender main.cpp
+          ./fpga_sender --file encrypted.txt
       
       - name: Deployment complete
         if: github.event_name == 'push'
