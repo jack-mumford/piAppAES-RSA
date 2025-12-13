@@ -31,7 +31,22 @@ jobs:
         run: |
           cd piApp
           g++ -o fpga_sender main.cpp
-          ./fpga_sender --file encrypted.txt
+          
+          # Find available serial port
+          if [ -e /dev/ttyUSB0 ]; then
+            PORT=/dev/ttyUSB0
+          elif [ -e /dev/ttyACM0 ]; then
+            PORT=/dev/ttyACM0
+          else
+            echo "Available serial ports:"
+            ls /dev/tty* | grep -E "(USB|ACM)" || echo "No USB/ACM ports found"
+            echo "Running in test mode..."
+            ./fpga_sender --test --file encrypted.txt
+            exit 0
+          fi
+          
+          echo "Using serial port: $PORT"
+          ./fpga_sender --file encrypted.txt --port $PORT
       
       - name: Deployment complete
         if: github.event_name == 'push'
