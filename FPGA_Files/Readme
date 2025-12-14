@@ -1,0 +1,9 @@
+FPGA files are easy and straight forward to run and test.
+
+I recommend using Vivado for system design and verification as that is the design suite I used.
+
+To run each file you need to open the project and then depending on the module you want to simulate you much make that your top-level testbench. This ensures Vivado knows which simulation module you will want to run and properly display waveforms.
+
+You can directly change the expected plaintext and inputted ciphertext in the testbenches of each AES and RSA module. The RSA module allows you to set all variables as well to confirm the math behind RSA is working.
+
+There is no needed librairies to run each test, but to synthesize the files you must have an FPGA board. This project was designed for the Basys3 FPGA board.
