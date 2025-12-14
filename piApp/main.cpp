@@ -7,47 +7,49 @@
 #include <fcntl.h>
 #include <termios.h>
 
-std::vector<unsigned char> hex_to_bytes(const std::string& hex) {
-    std::vector<unsigned char> bytes;
+using namespace std;
+
+vector<unsigned char> hex_to_bytes(const string& hex) {
+    vector<unsigned char> bytes;
     for (size_t i = 0; i < hex.length(); i += 2) {
-        unsigned char byte = std::stoi(hex.substr(i, 2), nullptr, 16);
+        unsigned char byte = stoi(hex.substr(i, 2), nullptr, 16);
         bytes.push_back(byte);
     }
     return bytes;
 }
 
 int main(int argc, char* argv[]) {
-    std::string file = "encrypted.txt";
-    std::string port = "/dev/ttyUSB0";
+    string file = "encrypted.txt";
+    string port = "/dev/ttyUSB0";
     bool test = false;
     
     for (int i = 1; i < argc; i++) {
-        if (std::string(argv[i]) == "--file" && i+1 < argc) file = argv[++i];
-        if (std::string(argv[i]) == "--port" && i+1 < argc) port = argv[++i];
-        if (std::string(argv[i]) == "--test") test = true;
+        if (string(argv[i]) == "--file" && i+1 < argc) file = argv[++i];
+        if (string(argv[i]) == "--port" && i+1 < argc) port = argv[++i];
+        if (string(argv[i]) == "--test") test = true;
     }
     
     // Read encrypted file
-    std::ifstream in(file);
+    ifstream in(file);
     if (!in) {
-        std::cerr << "ERROR: Cannot open " << file << std::endl;
+        cerr << "ERROR: Cannot open " << file << endl;
         return 1;
     }
-    std::string hex_data;
-    std::getline(in, hex_data);
+    string hex_data;
+    getline(in, hex_data);
     in.close();
     
-    std::cout << "Read " << hex_data.length()/2 << " bytes from " << file << std::endl;
+    cout << "Read " << hex_data.length()/2 << " bytes from " << file << endl;
     
     if (test) {
-        std::cout << "TEST MODE: Would send to FPGA" << std::endl;
+        cout << "TEST MODE: Would send to FPGA" << endl;
         return 0;
     }
     
     // Open serial port
     int fd = open(port.c_str(), O_RDWR | O_NOCTTY);
     if (fd < 0) {
-        std::cerr << "ERROR: Cannot open serial port " << port << std::endl;
+        cerr << "ERROR: Cannot open serial port " << port << endl;
         return 1;
     }
     
@@ -71,10 +73,10 @@ int main(int argc, char* argv[]) {
     close(fd);
     
     if (written == (ssize_t)bytes.size()) {
-        std::cout << "✓ Sent " << written << " bytes to FPGA" << std::endl;
+        cout << "✓ Sent " << written << " bytes to FPGA" << endl;
         return 0;
     } else {
-        std::cerr << "ERROR: Write failed" << std::endl;
+        cerr << "ERROR: Write failed" << endl;
         return 1;
     }
 }
